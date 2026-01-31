@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIS - Categorizzazione e Prioritizzazione Moduli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        catalyst: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .module-card {
+            transition: all 0.2s ease;
+        }
+        
+        .module-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .priority-badge {
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .priority-badge:hover {
+            transform: scale(1.05);
+        }
+        
+        /* Editable text styling */
+        [contenteditable="true"] {
+            outline: none;
+            border-radius: 4px;
+            padding: 2px 4px;
+            transition: all 0.2s ease;
+        }
+        
+        [contenteditable="true"]:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+        
+        [contenteditable="true"]:focus {
+            background-color: rgba(59, 130, 246, 0.1);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        
+        .dark [contenteditable="true"]:hover {
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        
+        .dark [contenteditable="true"]:focus {
+            background-color: rgba(59, 130, 246, 0.15);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-950 transition-colors duration-300">
+    <!-- Theme Toggle Button -->
+    <button id="themeToggle" class="fixed top-4 right-4 z-50 p-2 rounded-lg bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-all">
+        <svg id="sunIcon" class="w-5 h-5 text-gray-800 dark:text-gray-200 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+        </svg>
+        <svg id="moonIcon" class="w-5 h-5 text-gray-800 dark:text-gray-200 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+        </svg>
+    </button>
+
+    <div class="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                SIS - Categorizzazione Moduli
+            </h1>
+            <p class="text-lg text-gray-600 dark:text-gray-400">
+                Sistema di gestione e prioritizzazione dei moduli per utente finale
+            </p>
+        </div>
+
+        <!-- Stats & Actions -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Stats Card -->
+            <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+                <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">Statistiche</h3>
+                <div class="grid grid-cols-4 gap-4">
+                    <div>
+                        <div class="text-3xl font-bold text-gray-400 dark:text-gray-500" id="totalModules">0/40</div>
+                        <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">Assegnati</div>
+                    </div>
+                    <div>
+                        <div class="text-3xl font-bold text-red-600 dark:text-red-400" id="essentialsCount">0</div>
+                        <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">Essenziali</div>
+                    </div>
+                    <div>
+                        <div class="text-3xl font-bold text-amber-600 dark:text-amber-400" id="importantCount">0</div>
+                        <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">Importanti</div>
+                    </div>
+                    <div>
+                        <div class="text-3xl font-bold text-blue-600 dark:text-blue-400" id="usefulCount">0</div>
+                        <div class="text-xs text-gray-600 dark:text-gray-400 mt-1">Utili</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions Card -->
+            <div class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6">
+                <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">Azioni</h3>
+                <div class="flex gap-3">
+                    <button id="saveBtn" class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
+                        </svg>
+                        Salva
+                    </button>
+                    <button id="exportBtn" class="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Esporta CSV
+                    </button>
+                </div>
+                <div id="statusMessage" class="mt-4 text-sm text-center text-gray-600 dark:text-gray-400 hidden"></div>
+            </div>
+        </div>
+
+        <!-- Categories will be dynamically generated here -->
+        <div id="categories-container"></div>
+    </div>
+
+    <script>
+        // Module data structured by category
+        const modulesData = {
+            infrastruttura: {
+                icon: '🌐',
+                title: 'Infrastruttura di Base',
+                subtitle: 'Fondamenta tecniche del sistema',
+                color: 'amber',
+                modules: [
+                    {
+                        title: 'Anagrafiche e Profili Utente',
+                        description: 'Gestisce i profili completi di studenti, genitori, docenti e staff, includendo dati personali, contatti, documenti, informazioni mediche, storico accademico e campi personalizzati.'
+                    },
+                    {
+                        title: 'Ruoli, Permessi e Privacy',
+                        description: 'Controlla l\'accesso ai dati e alle funzionalità tramite ruoli e permessi, gestisce consensi, audit trail, cancellazione e GDPR.'
+                    },
+                    {
+                        title: 'Import, Export e Migrazione Dati',
+                        description: 'Supporta l\'importazione e l\'esportazione di dati (CSV/Excel) e la migrazione da sistemi preesistenti, con validazioni e log degli errori.'
+                    },
+                    {
+                        title: 'Autenticazione & SSO',
+                        description: 'Login con Google e integrazione servizi di autenticazione (SSO Microsoft).'
+                    },
+                    {
+                        title: 'Internazionalizzazione (multi-lingua)',
+                        description: 'Supporto per multiple lingue nell\'interfaccia del sistema.'
+                    },
+                    {
+                        title: 'Template/Email Transazionali',
+                        description: 'Salva template e permette la gestione delle variabili per comunicazioni automatiche.'
+                    },
+                    {
+                        title: 'Centro Comunicazioni',
+                        description: 'Centralizza tutte le comunicazioni scuola-famiglia-staff (annunci, messaggi operativi, comunicazioni finanziarie e logistiche), con tracciamento automatico ai fini GDPR.'
+                    },
+                    {
+                        title: 'APP Mobile',
+                        description: 'Realizzazione dell\'applicazione mobile per smartphone e tablet con gestione delle notifiche push.'
+                    },
+                    {
+                        title: 'Visualizzazione Responsive',
+                        description: 'Visualizzazione del SIS ottimizzata per tablet e smartphone.'
+                    }
+                ]
+            },
+            didattica: {
+                icon: '📋',
+                title: 'Per la Segreteria Didattica',
+                subtitle: 'Gestione attività didattiche e organizzazione',
+                color: 'blue',
+                modules: [
+                    {
+                        title: 'Calendario Scolastico, Timetabling e Struttura Didattica',
+                        description: 'Definisce l\'organizzazione accademica della scuola: classi, sezioni, homeroom, associazione studenti-docenti e collegamento ai percorsi e curricula. Gestisce orari con vincoli didattici e organizzativi.'
+                    },
+                    {
+                        title: 'Presenze e Frequenza Studenti',
+                        description: 'Registra e monitora la frequenza di studenti, con gestione di assenze, ritardi, uscite anticipate. Report per mensa, bus, doposcuola, gite.'
+                    },
+                    {
+                        title: 'Sostituzioni e Coperture Docenti',
+                        description: 'Registra e monitora la presenza/assenza dei docenti. Determina disponibilità per coperture interne assenze, comunicazioni automatiche e tracciamento delle ore di copertura.'
+                    },
+                    {
+                        title: 'Reporting Operativo',
+                        description: 'Genera report su studenti, docenti, presenze, sostituzioni e utilizzo dei servizi (es. mensa, bus), fornendo una vista operativa per segreteria e direzione.'
+                    },
+                    {
+                        title: 'Moduli Form e Raccolta Dati',
+                        description: 'Consente di creare moduli per la raccolta dati tramite pagine create ad hoc o con Google Form. Utile per raccogliere consensi, autorizzazioni e analizzare i risultati.'
+                    },
+                    {
+                        title: 'Eventi e Appuntamenti',
+                        description: 'Gestisce eventi scolastici, riunioni e appuntamenti (open day, colloqui, eventi di classe), con iscrizione tramite calendario e moduli online.'
+                    },
+                    {
+                        title: 'Afterschool',
+                        description: 'Gestisce attività extracurricolari, iscrizioni, presenze e produce liste operative giornaliere basate sulle presenze scolastiche.'
+                    },
+                    {
+                        title: 'Supporto Psicologico / Aides',
+                        description: 'Gestisce incontri, interventi educativi speciali e documentazione riservata per studenti con bisogni specifici.'
+                    },
+                    {
+                        title: 'Sicurezza (Accessi)',
+                        description: 'Supporta la gestione degli accessi, delle persone autorizzate e degli eventi legati alla sicurezza scolastica. Include comunicazioni da famiglie per ritardi/uscite anticipate.'
+                    },
+                    {
+                        title: 'Controllo Documenti e Scadenze',
+                        description: 'Monitora la validità di documenti personali, sanitari e contrattuali, inviando notifiche automatiche prima delle scadenze.'
+                    },
+                    {
+                        title: 'Collegamento LMS',
+                        description: 'Consente il collegamento con il SIS per voti, pagelle e documenti; integra le scadenze nel calendario di studenti e docenti.'
+                    },
+                    {
+                        title: 'Integrazione HR',
+                        description: 'Notificare le assenze di teacher e staff al personale HR, con possibili integrazioni verso piattaforme esistenti.'
+                    },
+                    {
+                        title: 'Valutazioni e Scrutini',
+                        description: 'Gestisce la registrazione di voti, giudizi e valutazioni periodiche, supportando scrutini intermedi e finali e la generazione di pagelle e report di esito.'
+                    },
+                    {
+                        title: 'Biblioteca (Library Management)',
+                        description: 'Gestisce il catalogo della biblioteca scolastica e il prestito di libri a studenti e docenti utilizzando gli utenti già presenti nel SIS come riferimento univoco.'
+                    },
+                    {
+                        title: 'Presenze e Frequenza Personale ATA',
+                        description: 'Registra e monitora la frequenza del personale ATA con gestione di assenze, ritardi, uscite anticipate.'
+                    }
+                ]
+            },
+            amministrativa: {
+                icon: '🏛️',
+                title: 'Per la Segreteria Amministrativa',
+                subtitle: 'Gestione finanziaria e amministrativa',
+                color: 'red',
+                modules: [
+                    {
+                        title: 'Gestione Finanziaria e Rette',
+                        description: 'Gestisce strutture tariffarie personalizzabili, piani di pagamento, quote extra, solleciti automatici e integrazione con sistemi di pagamento online.'
+                    },
+                    {
+                        title: 'Ammissioni e Iscrizioni (CRM)',
+                        description: 'Gestisce il ciclo di ammissioni con integrazione Google Forms: moduli online, stato delle candidature, comunicazioni automatiche e iscrizioni con firma digitale. Trasforma le iscrizioni in record studenti automaticamente.'
+                    },
+                    {
+                        title: 'Ammissioni e Iscrizioni pt.2',
+                        description: 'Gestisce il ciclo di ammissioni con moduli proprietari che si devono integrare con il sito online (html + javascript).'
+                    },
+                    {
+                        title: 'Integrazione Contabilità',
+                        description: 'Possibilità di gestire i pagamenti direttamente dentro alla piattaforma, flaggare i bonifici ricevuti ed eventuali integrazioni con altri sistemi di contabilità.'
+                    },
+                    {
+                        title: 'Ordini Materiali e Divise',
+                        description: 'Gestione ordini di materiali per la scuola e ordine divise scolastiche.'
+                    }
+                ]
+            },
+            famiglie: {
+                icon: '👨‍👩‍👧‍👦',
+                title: 'Per Famiglie e Studenti',
+                subtitle: 'Servizi dedicati alle famiglie',
+                color: 'green',
+                modules: [
+                    {
+                        title: 'Trasporto Scolastico',
+                        description: 'Gestisce l\'assegnazione degli studenti al servizio bus e consente di generare elenchi e report basati su presenze e linee bus.'
+                    },
+                    {
+                        title: 'Trasporto Scolastico pt.2',
+                        description: 'Include gestione delle variazioni comunicate dalle famiglie e dall\'azienda che si occupa dei trasporti.'
+                    },
+                    {
+                        title: 'Mensa',
+                        description: 'Consente di generare elenchi e report basati su presenze, ottenendo i dati per pasti speciali e allergie sempre aggiornati.'
+                    },
+                    {
+                        title: 'Mensa pt.2',
+                        description: 'Include ricezione avvisi su eventuali modifiche dei campi interessati (allergie, pasti speciali).'
+                    }
+                ]
+            },
+            direzione: {
+                icon: '📊',
+                title: 'Per la Direzione',
+                subtitle: 'Analytics e decisioni strategiche',
+                color: 'purple',
+                modules: [
+                    {
+                        title: 'Analytics Avanzati e AI',
+                        description: 'Offre dashboard evolute e analisi assistite da AI per individuare trend, criticità e supportare le decisioni strategiche della direzione.'
+                    },
+                    {
+                        title: 'Qualità e Soddisfazione',
+                        description: 'Raccoglie feedback e survey da studenti e famiglie per misurare la qualità del servizio scolastico e supportare decisioni strategiche.'
+                    },
+                    {
+                        title: 'Business Intelligence Avanzata',
+                        description: 'Offre analisi evolute e dashboard direzionali su trend storici, performance scolastiche e previsioni di iscrizione e carico operativo.'
+                    }
+                ]
+            }
+        };
+
+        // Function to create priority selector HTML
+        function createPrioritySelector() {
+            return `
+                <div class="priority-selector flex gap-2">
+                    <button class="priority-badge px-4 py-2 text-sm font-semibold rounded bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 opacity-30 hover:opacity-100" data-priority="Essenziale">E</button>
+                    <button class="priority-badge px-4 py-2 text-sm font-semibold rounded bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 opacity-30 hover:opacity-100" data-priority="Importante">I</button>
+                    <button class="priority-badge px-4 py-2 text-sm font-semibold rounded bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 opacity-30 hover:opacity-100" data-priority="Utile">U</button>
+                </div>
+            `;
+        }
+
+        // Render all categories
+        function renderCategories() {
+            const container = document.getElementById('categories-container');
+            
+            Object.keys(modulesData).forEach(categoryKey => {
+                const category = modulesData[categoryKey];
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category mb-8';
+                categoryDiv.dataset.category = categoryKey;
+                
+                categoryDiv.innerHTML = `
+                    <div class="flex items-center mb-4">
+                        <div class="flex-shrink-0 w-12 h-12 bg-${category.color}-100 dark:bg-${category.color}-900/30 rounded-lg flex items-center justify-center mr-4">
+                            <span class="text-2xl">${category.icon}</span>
+                        </div>
+                        <div class="flex-1">
+                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white editable-title" contenteditable="true">${category.title}</h2>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 editable-subtitle" contenteditable="true">${category.subtitle}</p>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                        ${category.modules.map(module => `
+                            <div class="module-card bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-5">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h3 class="font-semibold text-gray-900 dark:text-white text-base editable-module-title flex-1 mr-3" contenteditable="true">${module.title}</h3>
+                                    ${createPrioritySelector()}
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed editable-module-description" contenteditable="true">${module.description}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                container.appendChild(categoryDiv);
+            });
+        }
+
+        // Initialize
+        renderCategories();
+
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        html.classList.toggle('dark', currentTheme === 'dark');
+        
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            const newTheme = html.classList.contains('dark') ? 'dark' : 'light';
+            localStorage.setItem('theme', newTheme);
+        });
+
+        // Priority Selection Logic
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('priority-badge')) {
+                e.stopPropagation();
+                const parent = e.target.closest('.priority-selector');
+                const moduleCard = e.target.closest('.module-card');
+                
+                parent.querySelectorAll('.priority-badge').forEach(b => {
+                    b.classList.remove('opacity-100');
+                    b.classList.add('opacity-30');
+                });
+                
+                e.target.classList.remove('opacity-30');
+                e.target.classList.add('opacity-100');
+                
+                moduleCard.dataset.priority = e.target.dataset.priority;
+                
+                updateStats();
+            }
+        });
+
+        // Button event listeners
+        document.getElementById('saveBtn').addEventListener('click', saveState);
+        document.getElementById('exportBtn').addEventListener('click', exportToCSV);
+
+        // Try to auto-load saved state on page load
+        window.addEventListener('load', () => {
+            const saved = localStorage.getItem('sis_priorities');
+            if (saved) {
+                loadState();
+            }
+        });
+
+        // Update Statistics
+        function updateStats() {
+            const allModules = document.querySelectorAll('.module-card');
+            const essentialModules = document.querySelectorAll('.module-card[data-priority="Essenziale"]');
+            const importantModules = document.querySelectorAll('.module-card[data-priority="Importante"]');
+            const usefulModules = document.querySelectorAll('.module-card[data-priority="Utile"]');
+            
+            const totalAssigned = essentialModules.length + importantModules.length + usefulModules.length;
+            
+            document.getElementById('totalModules').textContent = `${totalAssigned}/${allModules.length}`;
+            document.getElementById('essentialsCount').textContent = essentialModules.length;
+            document.getElementById('importantCount').textContent = importantModules.length;
+            document.getElementById('usefulCount').textContent = usefulModules.length;
+        }
+
+        // Save state to localStorage
+        function saveState() {
+            const priorities = {};
+            const editedContent = {};
+            
+            // Save priorities
+            document.querySelectorAll('.module-card').forEach((card, index) => {
+                const title = card.querySelector('h3').textContent;
+                const priority = card.dataset.priority || '';
+                priorities[title] = priority;
+            });
+            
+            // Save edited text content
+            document.querySelectorAll('[contenteditable="true"]').forEach((el, index) => {
+                const key = `editable_${index}`;
+                editedContent[key] = el.textContent;
+            });
+            
+            localStorage.setItem('sis_priorities', JSON.stringify(priorities));
+            localStorage.setItem('sis_edited_content', JSON.stringify(editedContent));
+            showMessage('Stato salvato con successo! ✓', 'success');
+        }
+
+        // Load state from localStorage
+        function loadState() {
+            const saved = localStorage.getItem('sis_priorities');
+            const savedContent = localStorage.getItem('sis_edited_content');
+            
+            if (!saved && !savedContent) {
+                showMessage('Nessuno stato salvato trovato', 'info');
+                return;
+            }
+            
+            let loadedCount = 0;
+            
+            // Restore priorities
+            if (saved) {
+                const priorities = JSON.parse(saved);
+                
+                document.querySelectorAll('.module-card').forEach(card => {
+                    const title = card.querySelector('h3').textContent;
+                    if (priorities[title]) {
+                        card.dataset.priority = priorities[title];
+                        
+                        // Update visual state
+                        const selector = card.querySelector('.priority-selector');
+                        selector.querySelectorAll('.priority-badge').forEach(badge => {
+                            badge.classList.remove('opacity-100');
+                            badge.classList.add('opacity-30');
+                            if (badge.dataset.priority === priorities[title]) {
+                                badge.classList.remove('opacity-30');
+                                badge.classList.add('opacity-100');
+                            }
+                        });
+                        loadedCount++;
+                    }
+                });
+            }
+            
+            // Restore edited text
+            if (savedContent) {
+                const editedContent = JSON.parse(savedContent);
+                document.querySelectorAll('[contenteditable="true"]').forEach((el, index) => {
+                    const key = `editable_${index}`;
+                    if (editedContent[key]) {
+                        el.textContent = editedContent[key];
+                    }
+                });
+            }
+            
+            updateStats();
+            showMessage(`Stato caricato con successo! ✓`, 'success');
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            const rows = [['Categoria', 'Modulo', 'Priorità', 'Descrizione']];
+            
+            document.querySelectorAll('.category').forEach(categoryDiv => {
+                const categoryName = categoryDiv.querySelector('h2').textContent;
+                
+                categoryDiv.querySelectorAll('.module-card').forEach(card => {
+                    const title = card.querySelector('h3').textContent;
+                    const description = card.querySelector('p').textContent;
+                    const priority = card.dataset.priority || 'Non assegnata';
+                    
+                    rows.push([
+                        `"${categoryName}"`,
+                        `"${title}"`,
+                        `"${priority}"`,
+                        `"${description.replace(/"/g, '""')}"`
+                    ]);
+                });
+            });
+            
+            const csv = rows.map(row => row.join(',')).join('\n');
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `sis_priorita_moduli_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showMessage('CSV esportato con successo! ✓', 'success');
+        }
+
+        // Show message
+        function showMessage(message, type) {
+            const statusEl = document.getElementById('statusMessage');
+            statusEl.textContent = message;
+            statusEl.classList.remove('hidden', 'text-green-600', 'text-blue-600', 'text-gray-600');
+            
+            if (type === 'success') {
+                statusEl.classList.add('text-green-600', 'dark:text-green-400');
+            } else if (type === 'info') {
+                statusEl.classList.add('text-blue-600', 'dark:text-blue-400');
+            } else {
+                statusEl.classList.add('text-gray-600', 'dark:text-gray-400');
+            }
+            
+            setTimeout(() => {
+                statusEl.classList.add('hidden');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
