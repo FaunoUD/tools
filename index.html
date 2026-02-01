@@ -203,8 +203,8 @@
         </div>
 
         <!-- Timeline Cards with integrated stats -->
-        <div class="mb-8 lg:flex lg:justify-center">
-            <div class="lg:w-2/3 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="mb-8 xl:flex xl:justify-center">
+            <div class="xl:w-2/3 grid grid-cols-1 xl:grid-cols-3 gap-4">
                 <div class="flex items-stretch gap-0 bg-white dark:bg-gray-900 rounded-lg border border-green-200 dark:border-green-800 overflow-hidden">
                     <div class="flex-shrink-0 flex flex-col items-center justify-start gap-2 p-4 bg-green-100 dark:bg-green-900/30">
                         <span class="editable-priority-label cursor-pointer inline-block px-3 py-1 text-xs font-bold rounded bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" contenteditable="true" data-priority="Essenziale">V1.0</span>
@@ -607,19 +607,14 @@
             Object.keys(modulesData).forEach(categoryKey => {
                 const category = modulesData[categoryKey];
                 const categoryDiv = document.createElement('div');
-                categoryDiv.className = 'category mb-8';
+                categoryDiv.className = 'category p-6 mb-8';
                 categoryDiv.dataset.category = categoryKey;
                 
                 categoryDiv.innerHTML = `
                     <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0 w-12 h-12 bg-${category.color}-100 dark:bg-${category.color}-900/30 rounded-lg flex items-center justify-center mr-4">
-                                <span class="text-2xl">${category.icon}</span>
-                            </div>
-                            <div class="flex-1">
-                                <h2 class="text-2xl font-bold text-gray-900 dark:text-white editable-title" contenteditable="true">${category.title}</h2>
-                                <p class="text-sm text-gray-600 dark:text-gray-400 editable-subtitle" contenteditable="true">${category.subtitle}</p>
-                            </div>
+                        <div class="flex-1">
+                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white editable-title" contenteditable="true">${category.title}</h2>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 editable-subtitle" contenteditable="true">${category.subtitle}</p>
                         </div>
                         <button class="add-module-btn px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1055,24 +1050,13 @@
                 state.categories.forEach((savedCategory, catIndex) => {
                     console.log(`Caricamento categoria ${catIndex}:`, savedCategory.title);
                     const categoryDiv = document.createElement('div');
-                    categoryDiv.className = 'category bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-6 mb-8';
-                    
-                    // Determine color based on category index (same order as original)
-                    const colors = ['amber', 'blue', 'red', 'purple', 'indigo'];
-                    const icons = ['🌐', '📋', '🏛️', '👨‍👩‍👧‍👦', '📊'];
-                    const color = colors[catIndex] || 'gray';
-                    const icon = icons[catIndex] || '📁';
+                    categoryDiv.className = 'category p-6 mb-8';
                     
                     categoryDiv.innerHTML = `
                         <div class="flex items-center justify-between mb-4">
-                            <div class="flex items-center">
-                                <div class="flex-shrink-0 w-12 h-12 bg-${color}-100 dark:bg-${color}-900/30 rounded-lg flex items-center justify-center mr-4">
-                                    <span class="text-2xl">${icon}</span>
-                                </div>
-                                <div class="flex-1">
-                                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white editable-title" contenteditable="true">${savedCategory.title}</h2>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 editable-subtitle" contenteditable="true">${savedCategory.subtitle}</p>
-                                </div>
+                            <div class="flex-1">
+                                <h2 class="text-2xl font-bold text-gray-900 dark:text-white editable-title" contenteditable="true">${savedCategory.title}</h2>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 editable-subtitle" contenteditable="true">${savedCategory.subtitle}</p>
                             </div>
                             <button class="add-module-btn px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors flex items-center gap-2">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
