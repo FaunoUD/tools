@@ -204,7 +204,7 @@
 
         <!-- Timeline Cards with integrated stats -->
         <div class="mb-8 xl:flex xl:justify-center">
-            <div class="xl:w-2/3 grid grid-cols-1 xl:grid-cols-3 gap-4 px-4">
+            <div class="xl:w-2/3 grid grid-cols-1 xl:grid-cols-3 gap-4">
                 <div class="flex items-stretch gap-0 bg-white dark:bg-gray-900 rounded-lg border border-green-200 dark:border-green-800 overflow-hidden">
                     <div class="flex-shrink-0 flex flex-col items-center justify-start gap-2 p-4 bg-green-100 dark:bg-green-900/30">
                         <span class="editable-priority-label cursor-pointer inline-block px-3 py-1 text-xs font-bold rounded bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" contenteditable="true" data-priority="Essenziale">V1.0</span>
@@ -852,49 +852,69 @@
                 e.preventDefault();
                 e.stopPropagation();
                 
-                const priority = viewModulesBtn.dataset.priority;
                 const modulesList = viewModulesBtn.nextElementSibling;
                 const toggleIcon = viewModulesBtn.querySelector('.toggle-icon');
                 
                 if (modulesList.classList.contains('hidden')) {
-                    // Show modules
+                    // Show modules - collect ALL priorities
                     modulesList.classList.remove('hidden');
                     toggleIcon.textContent = '▼';
                     
-                    // Populate modules list
-                    const modulesByCategory = {};
+                    const allPriorities = ['Essenziale', 'Importante', 'Nice-to-have'];
+                    const priorityLabels = {
+                        'Essenziale': 'V1.0',
+                        'Importante': 'Post',
+                        'Nice-to-have': '2027'
+                    };
+                    const priorityColors = {
+                        'Essenziale': 'text-green-700 dark:text-green-400',
+                        'Importante': 'text-yellow-700 dark:text-yellow-400',
+                        'Nice-to-have': 'text-blue-700 dark:text-blue-400'
+                    };
                     
-                    // Collect all modules with this priority
-                    document.querySelectorAll('.category').forEach(category => {
-                        const categoryTitle = category.querySelector('.editable-title').textContent;
-                        const modules = [];
+                    let html = '';
+                    
+                    allPriorities.forEach(priority => {
+                        const modulesByCategory = {};
                         
-                        category.querySelectorAll('.module-card').forEach(card => {
-                            if (card.dataset.priority === priority) {
-                                const title = card.querySelector('.editable-module-title').textContent;
-                                modules.push(title);
+                        // Collect all modules with this priority
+                        document.querySelectorAll('.category').forEach(category => {
+                            const categoryTitle = category.querySelector('.editable-title').textContent;
+                            const modules = [];
+                            
+                            category.querySelectorAll('.module-card').forEach(card => {
+                                if (card.dataset.priority === priority) {
+                                    const title = card.querySelector('.editable-module-title').textContent;
+                                    modules.push(title);
+                                }
+                            });
+                            
+                            if (modules.length > 0) {
+                                modulesByCategory[categoryTitle] = modules;
                             }
                         });
                         
-                        if (modules.length > 0) {
-                            modulesByCategory[categoryTitle] = modules;
+                        // Render this priority section if it has modules
+                        if (Object.keys(modulesByCategory).length > 0) {
+                            html += `<div class="mb-3">`;
+                            html += `<div class="font-bold ${priorityColors[priority]} mb-1.5">${priorityLabels[priority]}</div>`;
+                            
+                            Object.entries(modulesByCategory).forEach(([category, modules]) => {
+                                html += `<div class="mb-1.5 ml-2">`;
+                                html += `<div class="font-semibold text-gray-700 dark:text-gray-300 text-xs">${category}</div>`;
+                                html += `<ul class="ml-3 space-y-0.5">`;
+                                modules.forEach(module => {
+                                    html += `<li class="text-gray-600 dark:text-gray-400">• ${module}</li>`;
+                                });
+                                html += `</ul></div>`;
+                            });
+                            
+                            html += `</div>`;
                         }
                     });
                     
-                    // Render modules list
-                    let html = '';
-                    Object.entries(modulesByCategory).forEach(([category, modules]) => {
-                        html += `<div class="mb-2">`;
-                        html += `<div class="font-semibold text-gray-700 dark:text-gray-300 mb-1">${category}</div>`;
-                        html += `<ul class="ml-3 space-y-0.5">`;
-                        modules.forEach(module => {
-                            html += `<li class="text-gray-600 dark:text-gray-400">• ${module}</li>`;
-                        });
-                        html += `</ul></div>`;
-                    });
-                    
                     if (html === '') {
-                        html = '<div class="text-gray-500 dark:text-gray-400 italic">Nessun modulo con questa priorità</div>';
+                        html = '<div class="text-gray-500 dark:text-gray-400 italic">Nessun modulo assegnato</div>';
                     }
                     
                     modulesList.innerHTML = html;
