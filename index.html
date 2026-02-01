@@ -204,7 +204,7 @@
 
         <!-- Timeline Cards with integrated stats -->
         <div class="mb-8 xl:flex xl:justify-center">
-            <div class="xl:w-2/3 grid grid-cols-1 xl:grid-cols-3 gap-4">
+            <div class="xl:w-2/3 grid grid-cols-1 xl:grid-cols-3 gap-4 px-4">
                 <div class="flex items-stretch gap-0 bg-white dark:bg-gray-900 rounded-lg border border-green-200 dark:border-green-800 overflow-hidden">
                     <div class="flex-shrink-0 flex flex-col items-center justify-start gap-2 p-4 bg-green-100 dark:bg-green-900/30">
                         <span class="editable-priority-label cursor-pointer inline-block px-3 py-1 text-xs font-bold rounded bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" contenteditable="true" data-priority="Essenziale">V1.0</span>
@@ -212,7 +212,11 @@
                     </div>
                     <div class="flex-1 min-w-0 p-4 flex flex-col">
                         <div class="font-semibold text-sm text-gray-900 dark:text-white editable-priority-name cursor-pointer mb-1" contenteditable="true" data-priority="Essenziale">v1.0 - Luglio 2025</div>
-                        <div class="text-xs text-gray-600 dark:text-gray-400 flex-1" contenteditable="true">Moduli critici inclusi nel rilascio MVP per essere competitivi sul mercato</div>
+                        <div class="text-xs text-gray-600 dark:text-gray-400 mb-2" contenteditable="true">Moduli critici inclusi nel rilascio MVP per essere competitivi sul mercato</div>
+                        <button class="view-modules-btn text-xs text-green-700 dark:text-green-400 hover:underline text-left mt-auto" data-priority="Essenziale">
+                            <span class="toggle-icon">▶</span> Visualizza moduli
+                        </button>
+                        <div class="modules-list hidden mt-2 pt-2 border-t border-green-200 dark:border-green-700 text-xs" data-priority="Essenziale"></div>
                     </div>
                 </div>
                 <div class="flex items-stretch gap-0 bg-white dark:bg-gray-900 rounded-lg border border-yellow-200 dark:border-yellow-800 overflow-hidden">
@@ -222,7 +226,11 @@
                     </div>
                     <div class="flex-1 min-w-0 p-4 flex flex-col">
                         <div class="font-semibold text-sm text-gray-900 dark:text-white editable-priority-name cursor-pointer mb-1" contenteditable="true" data-priority="Importante">v1.0 o Q3-Q4 2025</div>
-                        <div class="text-xs text-gray-600 dark:text-gray-400 flex-1" contenteditable="true">Da includere nel v1.0 se possibile, altrimenti priorità alta post-lancio</div>
+                        <div class="text-xs text-gray-600 dark:text-gray-400 mb-2" contenteditable="true">Da includere nel v1.0 se possibile, altrimenti priorità alta post-lancio</div>
+                        <button class="view-modules-btn text-xs text-yellow-700 dark:text-yellow-400 hover:underline text-left mt-auto" data-priority="Importante">
+                            <span class="toggle-icon">▶</span> Visualizza moduli
+                        </button>
+                        <div class="modules-list hidden mt-2 pt-2 border-t border-yellow-200 dark:border-yellow-700 text-xs" data-priority="Importante"></div>
                     </div>
                 </div>
                 <div class="flex items-stretch gap-0 bg-white dark:bg-gray-900 rounded-lg border border-blue-200 dark:border-blue-800 overflow-hidden">
@@ -232,7 +240,11 @@
                     </div>
                     <div class="flex-1 min-w-0 p-4 flex flex-col">
                         <div class="font-semibold text-sm text-gray-900 dark:text-white editable-priority-name cursor-pointer mb-1" contenteditable="true" data-priority="Nice-to-have">Roadmap 2026-2027</div>
-                        <div class="text-xs text-gray-600 dark:text-gray-400 flex-1" contenteditable="true">Sviluppo futuro con bassa priorità, pianificazione a lungo termine</div>
+                        <div class="text-xs text-gray-600 dark:text-gray-400 mb-2" contenteditable="true">Sviluppo futuro con bassa priorità, pianificazione a lungo termine</div>
+                        <button class="view-modules-btn text-xs text-blue-700 dark:text-blue-400 hover:underline text-left mt-auto" data-priority="Nice-to-have">
+                            <span class="toggle-icon">▶</span> Visualizza moduli
+                        </button>
+                        <div class="modules-list hidden mt-2 pt-2 border-t border-blue-200 dark:border-blue-700 text-xs" data-priority="Nice-to-have"></div>
                     </div>
                 </div>
             </div>
@@ -834,6 +846,67 @@
 
         // Priority Selection Logic
         document.addEventListener('click', function(e) {
+            // View modules button toggle
+            const viewModulesBtn = e.target.closest('.view-modules-btn');
+            if (viewModulesBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const priority = viewModulesBtn.dataset.priority;
+                const modulesList = viewModulesBtn.nextElementSibling;
+                const toggleIcon = viewModulesBtn.querySelector('.toggle-icon');
+                
+                if (modulesList.classList.contains('hidden')) {
+                    // Show modules
+                    modulesList.classList.remove('hidden');
+                    toggleIcon.textContent = '▼';
+                    
+                    // Populate modules list
+                    const modulesByCategory = {};
+                    
+                    // Collect all modules with this priority
+                    document.querySelectorAll('.category').forEach(category => {
+                        const categoryTitle = category.querySelector('.editable-title').textContent;
+                        const modules = [];
+                        
+                        category.querySelectorAll('.module-card').forEach(card => {
+                            if (card.dataset.priority === priority) {
+                                const title = card.querySelector('.editable-module-title').textContent;
+                                modules.push(title);
+                            }
+                        });
+                        
+                        if (modules.length > 0) {
+                            modulesByCategory[categoryTitle] = modules;
+                        }
+                    });
+                    
+                    // Render modules list
+                    let html = '';
+                    Object.entries(modulesByCategory).forEach(([category, modules]) => {
+                        html += `<div class="mb-2">`;
+                        html += `<div class="font-semibold text-gray-700 dark:text-gray-300 mb-1">${category}</div>`;
+                        html += `<ul class="ml-3 space-y-0.5">`;
+                        modules.forEach(module => {
+                            html += `<li class="text-gray-600 dark:text-gray-400">• ${module}</li>`;
+                        });
+                        html += `</ul></div>`;
+                    });
+                    
+                    if (html === '') {
+                        html = '<div class="text-gray-500 dark:text-gray-400 italic">Nessun modulo con questa priorità</div>';
+                    }
+                    
+                    modulesList.innerHTML = html;
+                } else {
+                    // Hide modules
+                    modulesList.classList.add('hidden');
+                    toggleIcon.textContent = '▶';
+                }
+                
+                return;
+            }
+            
             // Add category below button
             const addCategoryBelowBtn = e.target.closest('.add-category-below-btn');
             if (addCategoryBelowBtn) {
