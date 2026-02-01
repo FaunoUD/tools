@@ -240,16 +240,6 @@
 
         <!-- Categories will be dynamically generated here -->
         <div id="categories-container"></div>
-        
-        <!-- Add Category Button - At the bottom -->
-        <div class="mt-6 flex justify-center">
-            <button id="addCategoryBtn" class="px-6 py-3 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-md">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Aggiungi Categoria
-            </button>
-        </div>
     </div>
 
     <script>
@@ -497,6 +487,92 @@
             });
         }
         
+        // Initialize category drag and drop
+        function initializeCategoryDragAndDrop() {
+            const categories = document.querySelectorAll('.category');
+            const container = document.getElementById('categories-container');
+            
+            categories.forEach(category => {
+                // Make category draggable via header
+                const header = category.querySelector('.flex.items-center.justify-between.mb-4');
+                if (header) {
+                    header.setAttribute('draggable', 'true');
+                    header.style.cursor = 'move';
+                    
+                    header.addEventListener('dragstart', handleCategoryDragStart);
+                    header.addEventListener('dragend', handleCategoryDragEnd);
+                }
+            });
+            
+            // Set up drop zones for categories
+            container.addEventListener('dragover', handleCategoryDragOver);
+            container.addEventListener('drop', handleCategoryDrop);
+        }
+        
+        let draggedCategory = null;
+        
+        function handleCategoryDragStart(e) {
+            draggedCategory = this.closest('.category');
+            draggedCategory.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+        }
+        
+        function handleCategoryDragEnd(e) {
+            if (draggedCategory) {
+                draggedCategory.style.opacity = '1';
+                draggedCategory = null;
+            }
+        }
+        
+        function handleCategoryDragOver(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            e.dataTransfer.dropEffect = 'move';
+            
+            // Find closest category to mouse position
+            const afterElement = getDragAfterElement(this, e.clientY);
+            const container = document.getElementById('categories-container');
+            
+            if (afterElement == null) {
+                if (draggedCategory) {
+                    container.appendChild(draggedCategory);
+                }
+            } else {
+                if (draggedCategory) {
+                    container.insertBefore(draggedCategory, afterElement);
+                }
+            }
+            
+            return false;
+        }
+        
+        function handleCategoryDrop(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            
+            // Trigger auto-save to save new category order
+            triggerAutoSave();
+            
+            return false;
+        }
+        
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.category:not(.dragging)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+        
         let draggedCard = null;
         
         function handleDragStart(e) {
@@ -627,14 +703,20 @@
                             <h2 class="text-2xl font-bold text-gray-900 dark:text-white editable-title" contenteditable="true">${category.title}</h2>
                             <p class="text-sm text-gray-600 dark:text-gray-400 editable-subtitle" contenteditable="true">${category.subtitle}</p>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <button class="add-module-btn px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors flex items-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button class="add-module-btn px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                 </svg>
-                                Aggiungi Modulo
+                                <span class="text-sm">Modulo</span>
                             </button>
-                            <button class="delete-category-btn p-2 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-all opacity-0 group-hover:opacity-100" data-action="delete-category">
+                            <button class="add-category-below-btn px-3 py-2 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-800/50 text-blue-700 dark:text-blue-300 rounded-lg font-medium transition-colors flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                <span class="text-sm">Categoria</span>
+                            </button>
+                            <button class="delete-category-btn p-2 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-all" data-action="delete-category" title="Elimina categoria">
                                 <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                 </svg>
@@ -733,6 +815,9 @@
         
         // Initialize drag and drop for all module cards
         initializeDragAndDrop();
+        
+        // Initialize category drag and drop
+        initializeCategoryDragAndDrop();
 
         // Theme Toggle
         const themeToggle = document.getElementById('themeToggle');
@@ -749,6 +834,90 @@
 
         // Priority Selection Logic
         document.addEventListener('click', function(e) {
+            // Add category below button
+            const addCategoryBelowBtn = e.target.closest('.add-category-below-btn');
+            if (addCategoryBelowBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const currentCategory = addCategoryBelowBtn.closest('.category');
+                
+                // Create new category
+                const newCategory = document.createElement('div');
+                newCategory.className = 'category p-6 mb-8';
+                
+                newCategory.innerHTML = `
+                    <div class="flex items-center justify-between mb-4 group">
+                        <div class="flex-1">
+                            <h2 class="text-2xl font-bold text-gray-900 dark:text-white editable-title" contenteditable="true">Nuova Categoria</h2>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 editable-subtitle" contenteditable="true">Descrizione della categoria</p>
+                        </div>
+                        <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button class="add-module-btn px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                <span class="text-sm">Modulo</span>
+                            </button>
+                            <button class="add-category-below-btn px-3 py-2 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-800/50 text-blue-700 dark:text-blue-300 rounded-lg font-medium transition-colors flex items-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                <span class="text-sm">Categoria</span>
+                            </button>
+                            <button class="delete-category-btn p-2 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-all" data-action="delete-category" title="Elimina categoria">
+                                <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 modules-grid">
+                        <div class="module-card bg-white dark:bg-gray-900 rounded-lg shadow-md border border-gray-300 dark:border-gray-700 p-5 relative">
+                            <div class="flex justify-between items-start mb-4">
+                                <h3 class="font-semibold text-gray-900 dark:text-white text-base editable-module-title flex-1 mr-3" contenteditable="true">Nuovo Modulo</h3>
+                                ${createPrioritySelector()}
+                            </div>
+                            <div class="flex gap-3">
+                                <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed editable-module-description flex-1" contenteditable="true">Descrizione del modulo. Clicca per modificare.</p>
+                                <button class="delete-module-btn p-2 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-colors flex-shrink-0 self-center" data-action="delete">
+                                    <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Insert right after current category
+                currentCategory.insertAdjacentElement('afterend', newCategory);
+                
+                // Initialize drag and drop for the new module
+                initializeDragAndDrop();
+                
+                // Re-initialize category drag and drop
+                initializeCategoryDragAndDrop();
+                
+                // Update card border
+                const newCard = newCategory.querySelector('.module-card');
+                updateCardBorder(newCard);
+                
+                // Focus on title
+                const titleElement = newCategory.querySelector('.editable-title');
+                titleElement.focus();
+                const range = document.createRange();
+                range.selectNodeContents(titleElement);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+                
+                // Trigger auto-save
+                triggerAutoSave();
+                
+                return;
+            }
+            
             // Delete category button
             const deleteCategoryBtn = e.target.closest('.delete-category-btn');
             if (deleteCategoryBtn) {
@@ -863,74 +1032,6 @@
         // Button event listeners
         // Export to CSV functionality
         document.getElementById('exportBtn').addEventListener('click', exportToCSV);
-        
-        // Add Category button
-        document.getElementById('addCategoryBtn').addEventListener('click', function() {
-            const container = document.getElementById('categories-container');
-            
-            // Create new category
-            const newCategory = document.createElement('div');
-            newCategory.className = 'category p-6 mb-8';
-            
-            newCategory.innerHTML = `
-                <div class="flex items-center justify-between mb-4 group">
-                    <div class="flex-1">
-                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white editable-title" contenteditable="true">Nuova Categoria</h2>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 editable-subtitle" contenteditable="true">Descrizione della categoria</p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button class="add-module-btn px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors flex items-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                            </svg>
-                            Aggiungi Modulo
-                        </button>
-                        <button class="delete-category-btn p-2 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-all opacity-0 group-hover:opacity-100" data-action="delete-category">
-                            <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 modules-grid">
-                    <div class="module-card bg-white dark:bg-gray-900 rounded-lg shadow-md border border-gray-300 dark:border-gray-700 p-5 relative">
-                        <div class="flex justify-between items-start mb-4">
-                            <h3 class="font-semibold text-gray-900 dark:text-white text-base editable-module-title flex-1 mr-3" contenteditable="true">Nuovo Modulo</h3>
-                            ${createPrioritySelector()}
-                        </div>
-                        <div class="flex gap-3">
-                            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed editable-module-description flex-1" contenteditable="true">Descrizione del modulo. Clicca per modificare.</p>
-                            <button class="delete-module-btn p-2 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-colors flex-shrink-0 self-center" data-action="delete">
-                                <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            container.appendChild(newCategory);
-            
-            // Initialize drag and drop for the new module
-            initializeDragAndDrop();
-            
-            // Update card border
-            const newCard = newCategory.querySelector('.module-card');
-            updateCardBorder(newCard);
-            
-            // Focus on title
-            const titleElement = newCategory.querySelector('.editable-title');
-            titleElement.focus();
-            const range = document.createRange();
-            range.selectNodeContents(titleElement);
-            const selection = window.getSelection();
-            selection.removeAllRanges();
-            selection.addRange(range);
-            
-            // Trigger auto-save
-            triggerAutoSave();
-        });
         
         // Auto-save triggers - save after any change
         document.addEventListener('input', function(e) {
@@ -1070,7 +1171,7 @@
             updateAutoSaveIndicator('pending');
             autoSaveTimeout = setTimeout(() => {
                 saveState();
-            }, 2000); // Save 2 seconds after last change
+            }, 5000); // Save 5 seconds after last change (reduced API calls)
         }
         
         // Update auto-save indicator
@@ -1089,9 +1190,9 @@
                 pending: {
                     icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>',
                     text: 'Modifiche in attesa...',
-                    color: 'text-amber-600 dark:text-amber-400',
-                    bg: 'bg-amber-50 dark:bg-amber-900/20',
-                    border: 'border-amber-300 dark:border-amber-700'
+                    color: 'text-yellow-600 dark:text-yellow-400',
+                    bg: 'bg-yellow-50 dark:bg-yellow-900/20',
+                    border: 'border-yellow-300 dark:border-yellow-700'
                 },
                 saving: {
                     icon: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>',
@@ -1201,14 +1302,20 @@
                                 <h2 class="text-2xl font-bold text-gray-900 dark:text-white editable-title" contenteditable="true">${savedCategory.title}</h2>
                                 <p class="text-sm text-gray-600 dark:text-gray-400 editable-subtitle" contenteditable="true">${savedCategory.subtitle}</p>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <button class="add-module-btn px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors flex items-center gap-2">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button class="add-module-btn px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors flex items-center gap-1.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                                     </svg>
-                                    Aggiungi Modulo
+                                    <span class="text-sm">Modulo</span>
                                 </button>
-                                <button class="delete-category-btn p-2 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-all opacity-0 group-hover:opacity-100" data-action="delete-category">
+                                <button class="add-category-below-btn px-3 py-2 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/30 dark:hover:bg-blue-800/50 text-blue-700 dark:text-blue-300 rounded-lg font-medium transition-colors flex items-center gap-1.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                    <span class="text-sm">Categoria</span>
+                                </button>
+                                <button class="delete-category-btn p-2 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition-all" data-action="delete-category" title="Elimina categoria">
                                     <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                     </svg>
@@ -1287,6 +1394,7 @@
                 });
                 
                 initializeDragAndDrop(); // Re-initialize drag and drop for loaded cards
+                initializeCategoryDragAndDrop(); // Re-initialize category drag and drop
                 console.log('=== FINE CARICAMENTO ===');
                 
             } catch (error) {
